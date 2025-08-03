@@ -20,8 +20,8 @@ MODEL_CONFIG <- list(
 # API Configuration
 API_CONFIG <- list(
   max_request_size = "10MB",
-  timeout_seconds = 3600,  # 1 hour
-  rate_limit = 100,  # requests per minute
+  timeout_seconds = 3600, # 1 hour
+  rate_limit = 100, # requests per minute
   cors_enabled = TRUE
 )
 
@@ -52,7 +52,7 @@ PERFORMANCE_CONFIG <- list(
 SECURITY_CONFIG <- list(
   input_validation = TRUE,
   sanitize_input = TRUE,
-  max_input_size = 10485760  # 10MB
+  max_input_size = 10485760 # 10MB
 )
 
 # Get configuration value
@@ -74,14 +74,14 @@ set_config <- function(config_name, key, value) {
 # Load environment-specific configuration
 load_environment_config <- function() {
   env <- Sys.getenv("R_ENV", "development")
-  
+
   if (env == "production") {
     SERVICE_CONFIG$log_level <<- "WARN"
-    API_CONFIG$timeout_seconds <<- 1800  # 30 minutes
+    API_CONFIG$timeout_seconds <<- 1800 # 30 minutes
     PERFORMANCE_CONFIG$cache_enabled <<- TRUE
   } else if (env == "testing") {
     SERVICE_CONFIG$log_level <<- "DEBUG"
-    API_CONFIG$timeout_seconds <<- 300   # 5 minutes
+    API_CONFIG$timeout_seconds <<- 300 # 5 minutes
     PERFORMANCE_CONFIG$cache_enabled <<- FALSE
   }
-} 
+}

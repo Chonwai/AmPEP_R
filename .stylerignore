@@ -1,0 +1,31 @@
+# Styler ignore file for AmPEP project
+# Ignore non-R files
+*.fasta
+*.out
+*.log
+*.md
+*.txt
+*.yml
+*.yaml
+*.json
+*.xml
+*.html
+*.css
+*.js
+
+# Ignore data files
+*.RData
+*.rds
+*.csv
+*.tsv
+
+# Ignore documentation
+docs/
+*.Rmd
+
+# Ignore test outputs
+test/*.out
+test/*.log
+
+# Ignore model files
+*.mdl 

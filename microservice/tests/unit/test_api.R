@@ -29,7 +29,7 @@ test_that("Health check endpoint returns correct format", {
     timestamp = Sys.time(),
     model_loaded = FALSE
   )
-  
+
   expect_equal(health_response$status, "healthy")
   expect_equal(health_response$service, "ampep-microservice")
   expect_equal(health_response$version, "1.0.0")
@@ -39,13 +39,13 @@ test_that("Health check endpoint returns correct format", {
 test_that("FASTA validation works correctly", {
   # Test valid FASTA
   expect_true(validate_fasta(test_fasta))
-  
+
   # Test invalid FASTA
   expect_false(validate_fasta(test_invalid_fasta))
-  
+
   # Test empty input
   expect_false(validate_fasta(""))
-  
+
   # Test single line
   expect_false(validate_fasta(">test"))
 })
@@ -53,7 +53,7 @@ test_that("FASTA validation works correctly", {
 # Test sequence parsing
 test_that("FASTA parsing works correctly", {
   sequences <- parse_fasta(test_fasta)
-  
+
   expect_equal(length(sequences), 2)
   expect_equal(sequences[[1]]$name, "test_sequence_1")
   expect_equal(sequences[[1]]$sequence, "ALWKTMLKKLGTMALHAGKAALGAAADTISQGTQ")
@@ -65,13 +65,13 @@ test_that("FASTA parsing works correctly", {
 test_that("Amino acid sequence validation works correctly", {
   # Test valid sequence
   expect_true(validate_sequence("ACDEFGHIKLMNPQRSTVWY"))
-  
+
   # Test invalid sequence
   expect_false(validate_sequence("ACDEFGHIKLMNPQRSTVWYX"))
-  
+
   # Test mixed case
   expect_true(validate_sequence("acdefghiklmnpqrstvwy"))
-  
+
   # Test empty sequence
   expect_false(validate_sequence(""))
 })
@@ -81,7 +81,7 @@ test_that("Prediction endpoint returns correct structure", {
   # Mock request
   request_body <- list(fasta = test_fasta)
   req <- mock_request(request_body)
-  
+
   # This would be tested with actual plumber instance
   # For now, we test the expected response structure
   expected_response <- list(
@@ -94,7 +94,7 @@ test_that("Prediction endpoint returns correct structure", {
       version = "1.0.0"
     )
   )
-  
+
   expect_equal(expected_response$status, "success")
   expect_equal(expected_response$metadata$sequences_processed, 2)
 })
@@ -104,7 +104,7 @@ test_that("Error handling works correctly", {
   # Test missing FASTA parameter
   request_body <- list()
   req <- mock_request(request_body)
-  
+
   # This would be tested with actual plumber instance
   # For now, we test the expected error structure
   expected_error <- list(
@@ -113,7 +113,7 @@ test_that("Error handling works correctly", {
     error_code = "PROCESSING_ERROR",
     timestamp = Sys.time()
   )
-  
+
   expect_equal(expected_error$status, "error")
   expect_equal(expected_error$error_code, "PROCESSING_ERROR")
 })
@@ -123,11 +123,11 @@ test_that("Configuration loading works correctly", {
   # Test default configuration
   expect_equal(get_config("SERVICE_CONFIG", "name"), "AmPEP Microservice")
   expect_equal(get_config("SERVICE_CONFIG", "version"), "1.0.0")
-  
+
   # Test configuration setting
   set_config("SERVICE_CONFIG", "test_key", "test_value")
   expect_equal(get_config("SERVICE_CONFIG", "test_key"), "test_value")
 })
 
 # Run all tests
-test_results <- test_dir("tests/unit", reporter = "summary") 
+test_results <- test_dir("tests/unit", reporter = "summary")
