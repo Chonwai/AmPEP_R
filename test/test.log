@@ -1,0 +1,65 @@
+Loading required package: seqinr
+Loading required package: caret
+Loading required package: lattice
+Loading required package: ggplot2
+
+Attaching package: ‘caret’
+
+The following object is masked from ‘package:seqinr’:
+
+    dotPlot
+
+Loading required package: protr
+Loading required package: MLmetrics
+
+Attaching package: ‘MLmetrics’
+
+The following objects are masked from ‘package:caret’:
+
+    MAE, RMSE
+
+The following object is masked from ‘package:base’:
+
+    Recall
+
+Loading required package: randomForest
+randomForest 4.6-12
+Type rfNews() to see new features/changes/bug fixes.
+
+Attaching package: ‘randomForest’
+
+The following object is masked from ‘package:ggplot2’:
+
+    margin
+
+Loading required package: gplots
+
+Attaching package: ‘gplots’
+
+The following object is masked from ‘package:stats’:
+
+    lowess
+
+Loading required package: methods
+Type 'citation("pROC")' for a citation.
+
+Attaching package: ‘pROC’
+
+The following objects are masked from ‘package:stats’:
+
+    cov, smooth, var
+
+
+Attaching package: ‘psych’
+
+The following object is masked from ‘package:randomForest’:
+
+    outlier
+
+The following objects are masked from ‘package:ggplot2’:
+
+    %+%, alpha
+
+Error in extractCTDD(seqs[i]) : x has unrecognized amino acid type
+Calls: constructDescMatrix -> extractCTDD
+Execution halted
