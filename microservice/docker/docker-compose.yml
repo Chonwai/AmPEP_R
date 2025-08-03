@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  ampep-microservice:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8001:8001"
+    environment:
+      - R_LOG_LEVEL=INFO
+      - PLUMBER_PORT=8001
+      - PLUMBER_HOST=0.0.0.0
+    volumes:
+      - ../logs:/app/logs
+      - ../data:/app/data
+    networks:
+      - ampep-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+
+  # Optional: Add monitoring stack
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - ampep-network
+    profiles:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    networks:
+      - ampep-network
+    profiles:
+      - monitoring
+
+networks:
+  ampep-network:
+    driver: bridge
+
+volumes:
+  grafana-storage: 
