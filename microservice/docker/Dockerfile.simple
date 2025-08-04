@@ -1,0 +1,52 @@
+# AmPEP Microservice Dockerfile (Simplified)
+# Based on rocker/r-ver for better stability
+
+FROM rocker/r-ver:4.2.0
+
+# Set environment variables
+ENV R_LIBS_USER=/usr/local/lib/R/library
+ENV PLUMBER_PORT=8001
+ENV PLUMBER_HOST=0.0.0.0
+
+# Install system dependencies required for R packages
+RUN apt-get update && apt-get install -y \
+    libcurl4-openssl-dev \
+    libssl-dev \
+    libxml2-dev \
+    libsodium-dev \
+    zlib1g-dev \
+    pkg-config \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install R packages step by step with explicit library path
+RUN R -e "options(repos='https://cran.r-project.org/'); install.packages('jsonlite', dependencies=TRUE, lib='/usr/local/lib/R/library')"
+RUN R -e "options(repos='https://cran.r-project.org/'); install.packages('randomForest', dependencies=TRUE, lib='/usr/local/lib/R/library')"
+RUN R -e "options(repos='https://cran.r-project.org/'); install.packages('seqinr', dependencies=TRUE, lib='/usr/local/lib/R/library')"
+RUN R -e "options(repos='https://cran.r-project.org/'); install.packages('plumber', dependencies=TRUE, lib='/usr/local/lib/R/library')"
+
+# Create app directory
+WORKDIR /app
+
+# Copy application files
+COPY microservice/api/ ./api/
+COPY microservice/src/ ./src/
+COPY microservice/config/ ./config/
+
+# Copy model and data files from project root
+COPY same_def_matlab_100tree_11mtry_rf.mdl ./
+COPY trian_po_set3298_for_ampep_sever.fasta ./
+COPY trian_ne_set9894_for_ampep_sever.fasta ./
+
+# Create necessary directories
+RUN mkdir -p logs
+
+# Expose port
+EXPOSE 8001
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8001/health || exit 1
+
+# Start the application
+CMD ["R", "-e", "library(plumber); pr <- plumb('api/plumber.R'); pr$run(host='0.0.0.0', port=8001)"] 
