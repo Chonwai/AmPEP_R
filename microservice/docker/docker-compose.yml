@@ -4,7 +4,7 @@ services:
   ampep-microservice:
     build:
       context: ../../
-      dockerfile: microservice/docker/Dockerfile.simple
+      dockerfile: microservice/docker/Dockerfile
     ports:
       - "8001:8001"
     environment:

@@ -9,20 +9,43 @@ library(randomForest)
 
 # Global variables
 MODEL_PATH <- "../same_def_matlab_100tree_11mtry_rf.mdl"
-model <- NULL
+
+# Initialize model storage environment
+model_env <- new.env()
+model_env$model <- NULL
+model_env$loaded <- FALSE
 
 # Initialize model on startup
-.onLoad <- function(libname, pkgname) {
+load_model <- function() {
   tryCatch(
     {
-      model <<- readRDS(MODEL_PATH)
+      model_env$model <- readRDS(MODEL_PATH)
+      model_env$loaded <- TRUE
       message("Model loaded successfully")
+      return(TRUE)
     },
     error = function(e) {
       message("Warning: Could not load model: ", e$message)
+      model_env$loaded <- FALSE
+      return(FALSE)
     }
   )
 }
+
+# Load model when the script is sourced
+tryCatch(
+  {
+    model_env$model <- readRDS(MODEL_PATH)
+    model_env$loaded <- TRUE
+    message("Model loaded successfully at startup")
+  },
+  error = function(e) {
+    message("Warning: Could not load model at startup: ", e$message)
+    message("Working directory: ", getwd())
+    message("Files in working directory: ", paste(list.files("."), collapse = ", "))
+    model_env$loaded <- FALSE
+  }
+)
 
 #* Health check endpoint
 #* @get /health
@@ -33,7 +56,7 @@ function() {
     service = "ampep-microservice",
     version = "1.0.0",
     timestamp = Sys.time(),
-    model_loaded = !is.null(model)
+    model_loaded = model_env$loaded
   )
 }
 
@@ -187,7 +210,7 @@ validate_sequence <- function(sequence) {
 
 #* Predict sequences using existing model
 predict_sequences <- function(sequences) {
-  if (is.null(model)) {
+  if (!model_env$loaded || is.null(model_env$model)) {
     stop("Model not loaded")
   }
 
