@@ -7,6 +7,9 @@ library(jsonlite)
 library(seqinr)
 library(randomForest)
 
+# Configure JSON serialization
+options(jsonlite.auto_unbox = TRUE)
+
 # Global variables
 MODEL_PATH <- "../same_def_matlab_100tree_11mtry_rf.mdl"
 
@@ -109,25 +112,27 @@ function(req) {
       # Perform prediction
       results <- predict_sequences(sequences)
 
-      # Return response
-      list(
-        status = "success",
-        message = "Prediction completed successfully",
+      # Return response with unboxed values
+      response <- list(
+        status = jsonlite::unbox("success"),
+        message = jsonlite::unbox("Prediction completed successfully"),
         data = results,
         metadata = list(
-          processing_time = Sys.time(),
-          sequences_processed = length(sequences),
-          version = "1.0.0"
+          processing_time = jsonlite::unbox(as.character(Sys.time())),
+          sequences_processed = jsonlite::unbox(length(sequences)),
+          version = jsonlite::unbox("1.0.0")
         )
       )
+
+      return(response)
     },
     error = function(e) {
-      # Error response
+      # Error response with unboxed values
       list(
-        status = "error",
-        message = e$message,
-        error_code = "PROCESSING_ERROR",
-        timestamp = Sys.time()
+        status = jsonlite::unbox("error"),
+        message = jsonlite::unbox(e$message),
+        error_code = jsonlite::unbox("PROCESSING_ERROR"),
+        timestamp = jsonlite::unbox(as.character(Sys.time()))
       )
     }
   )
@@ -220,11 +225,11 @@ predict_sequences <- function(sequences) {
     # Use existing prediction logic
     # This will be integrated with the existing predict_amp_by_rf_model.R logic
     prediction_result <- list(
-      sequence_name = seq$name,
-      sequence = seq$sequence,
-      prediction = "AMP", # Placeholder
-      probability = 0.85, # Placeholder
-      method = "ampep"
+      sequence_name = jsonlite::unbox(seq$name),
+      sequence = jsonlite::unbox(seq$sequence),
+      prediction = jsonlite::unbox("AMP"), # Placeholder
+      probability = jsonlite::unbox(0.85), # Placeholder
+      method = jsonlite::unbox("ampep")
     )
 
     results[[length(results) + 1]] <- prediction_result
