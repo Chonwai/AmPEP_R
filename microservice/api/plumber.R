@@ -6,6 +6,40 @@ library(plumber)
 library(jsonlite)
 library(seqinr)
 library(randomForest)
+library(protr)
+
+# Feature extraction function (simplified version)
+constructDescMatrix <- function(seqs, lambda = 4, method = "AAC", class_label = 1) {
+  require(protr)
+  seqs_n <- length(seqs)
+  data <- NULL
+
+  if ("D" %in% method) {
+    temp <- NULL
+    for (i in 1:seqs_n) {
+      T <- NULL
+      if (length(seqs[i]) <= lambda) {
+        l <- nchar(seqs[i]) - 1
+      } else {
+        l <- lambda
+      }
+      # Use protr's CTDD function for distribution composition
+      t <- extractCTDD(seqs[i])
+      T <- c(T, t)
+      temp <- rbind(temp, T)
+      rownames(temp)[i] <- i
+    }
+    data <- cbind(data, temp)
+  }
+
+  if (!is.null(class_label)) {
+    class <- rep(class_label, seqs_n)
+    data <- cbind(data, class)
+  }
+
+  data <- as.data.frame(data)
+  return(data)
+}
 
 # Configure JSON serialization
 options(jsonlite.auto_unbox = TRUE)
@@ -219,20 +253,59 @@ predict_sequences <- function(sequences) {
     stop("Model not loaded")
   }
 
+  # Set threshold (matching the standard 0.5 from the original code)
+  threshold <- 0.5
+
   results <- list()
 
   for (seq in sequences) {
-    # Use existing prediction logic
-    # This will be integrated with the existing predict_amp_by_rf_model.R logic
-    prediction_result <- list(
-      sequence_name = jsonlite::unbox(seq$name),
-      sequence = jsonlite::unbox(seq$sequence),
-      prediction = jsonlite::unbox("AMP"), # Placeholder
-      probability = jsonlite::unbox(0.85), # Placeholder
-      method = jsonlite::unbox("ampep")
-    )
+    tryCatch(
+      {
+        # Extract sequence for feature calculation
+        sequence_string <- seq$sequence
 
-    results[[length(results) + 1]] <- prediction_result
+        # Generate features using the same method as training
+        # constructDescMatrix function with parameters matching training
+        test_features <- constructDescMatrix(sequence_string, 4, "D", class_label = NULL)
+
+        # Make prediction using the loaded model
+        # type = "vote" returns probability matrix
+        prediction_probs <- predict(model_env$model, newdata = test_features, type = "vote")
+
+        # Extract probability for positive class (AMP)
+        amp_probability <- prediction_probs[1, 2] # Second column is positive class
+
+        # Apply threshold to get binary classification
+        prediction_class <- if (amp_probability >= threshold) 1 else 0
+
+        # Create result with correct format
+        prediction_result <- list(
+          sequence_name = jsonlite::unbox(seq$name),
+          sequence = jsonlite::unbox(seq$sequence),
+          prediction = jsonlite::unbox(prediction_class), # Now returns 0 or 1
+          probability = jsonlite::unbox(round(amp_probability, 6)), # Real probability
+          method = jsonlite::unbox("ampep")
+        )
+
+        results[[length(results) + 1]] <- prediction_result
+      },
+      error = function(e) {
+        # Handle individual sequence prediction errors
+        warning(paste("Failed to predict sequence", seq$name, ":", e$message))
+
+        # Return error result for this sequence
+        error_result <- list(
+          sequence_name = jsonlite::unbox(seq$name),
+          sequence = jsonlite::unbox(seq$sequence),
+          prediction = jsonlite::unbox(-1), # -1 indicates error
+          probability = jsonlite::unbox(0.0),
+          method = jsonlite::unbox("ampep"),
+          error = jsonlite::unbox(e$message)
+        )
+
+        results[[length(results) + 1]] <<- error_result
+      }
+    )
   }
 
   results
