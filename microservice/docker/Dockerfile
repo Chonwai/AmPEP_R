@@ -1,7 +1,7 @@
 # AmPEP Microservice Dockerfile
-# Based on R 4.2.0 with plumber support
+# Based on R 4.3.2 with plumber support
 
-FROM r-base:4.3.2
+FROM rocker/r-ver:4.3.2
 
 # Set environment variables
 ENV R_LIBS_USER=/usr/local/lib/R/library
