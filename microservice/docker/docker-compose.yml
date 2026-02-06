@@ -33,6 +33,7 @@ services:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     networks:
       - ampep-network
+      - axpep-ecosystem-network
     profiles:
       - monitoring
 
@@ -46,6 +47,7 @@ services:
       - grafana-storage:/var/lib/grafana
     networks:
       - ampep-network
+      - axpep-ecosystem-network
     profiles:
       - monitoring
 
