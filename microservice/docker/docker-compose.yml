@@ -10,6 +10,7 @@ services:
       - R_LOG_LEVEL=INFO
       - PLUMBER_PORT=8001
       - PLUMBER_HOST=0.0.0.0
+      - MODEL_PATH=/app/same_def_matlab_100tree_11mtry_rf.mdl
     volumes:
       - ../logs:/app/logs
       - ../data:/app/data
