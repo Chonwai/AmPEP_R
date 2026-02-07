@@ -45,7 +45,7 @@ constructDescMatrix <- function(seqs, lambda = 4, method = "AAC", class_label = 
 options(jsonlite.auto_unbox = TRUE)
 
 # Global variables
-MODEL_PATH <- "../same_def_matlab_100tree_11mtry_rf.mdl"
+MODEL_PATH <- Sys.getenv("MODEL_PATH", "/app/same_def_matlab_100tree_11mtry_rf.mdl")
 
 # Initialize model storage environment
 model_env <- new.env()
