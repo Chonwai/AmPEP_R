@@ -8,6 +8,11 @@ library(seqinr)
 library(randomForest)
 library(protr)
 
+# Safety limits — prevent runaway computation from hanging the service
+MAX_SEQUENCES_PER_REQUEST <- 500L    # max sequences per /api/predict call
+PREDICTION_TIMEOUT_SECS   <- 120L    # per-sequence computation timeout (2 min)
+REQUEST_TIMEOUT_SECS      <- 3600L   # total request timeout (1 hour)
+
 # Feature extraction function (simplified version)
 constructDescMatrix <- function(seqs, lambda = 4, method = "AAC", class_label = 1) {
   require(protr)
@@ -143,6 +148,17 @@ function(req) {
         }
       }
 
+      # Layer 1: reject oversized requests before any computation
+      if (length(sequences) > MAX_SEQUENCES_PER_REQUEST) {
+        return(list(
+          status = jsonlite::unbox("error"),
+          message = jsonlite::unbox(paste0("Too many sequences: ", length(sequences), ". Maximum allowed per request: ", MAX_SEQUENCES_PER_REQUEST, ". Please split into smaller batches.")),
+          max_allowed = jsonlite::unbox(MAX_SEQUENCES_PER_REQUEST),
+          received = jsonlite::unbox(length(sequences)),
+          timestamp = jsonlite::unbox(as.character(Sys.time()))
+        ))
+      }
+
       # Perform prediction
       results <- predict_sequences(sequences)
 
@@ -258,11 +274,17 @@ predict_sequences <- function(sequences) {
 
   results <- list()
 
+  # set total request wall-clock limit before iterating sequences
+  setTimeLimit(cpu = REQUEST_TIMEOUT_SECS, elapsed = REQUEST_TIMEOUT_SECS, transient = TRUE)
+
   for (seq in sequences) {
     tryCatch(
       {
         # Extract sequence for feature calculation
         sequence_string <- seq$sequence
+
+        # per-sequence timeout resets for each iteration
+        setTimeLimit(cpu = PREDICTION_TIMEOUT_SECS, elapsed = PREDICTION_TIMEOUT_SECS, transient = TRUE)
 
         # Generate features using the same method as training
         # constructDescMatrix function with parameters matching training
@@ -300,7 +322,11 @@ predict_sequences <- function(sequences) {
           prediction = jsonlite::unbox(-1), # -1 indicates error
           probability = jsonlite::unbox(0.0),
           method = jsonlite::unbox("ampep"),
-          error = jsonlite::unbox(e$message)
+          error = jsonlite::unbox(
+            if (grepl("time limit", e$message, ignore.case = TRUE))
+              paste0("Prediction timeout after ", PREDICTION_TIMEOUT_SECS, "s")
+            else e$message
+          )
         )
 
         results[[length(results) + 1]] <<- error_result
