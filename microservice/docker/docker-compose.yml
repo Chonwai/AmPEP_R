@@ -45,39 +45,3 @@ services:
 networks:
   axpep-ecosystem-network:
     external: true
-
-  # Optional: Add monitoring stack
-  prometheus:
-    image: prom/prometheus:latest
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-    networks:
-      - ampep-network
-      - axpep-ecosystem-network
-    profiles:
-      - monitoring
-
-  grafana:
-    image: grafana/grafana:latest
-    ports:
-      - "3000:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-    volumes:
-      - grafana-storage:/var/lib/grafana
-    networks:
-      - ampep-network
-      - axpep-ecosystem-network
-    profiles:
-      - monitoring
-
-networks:
-  ampep-network:
-    driver: bridge
-  axpep-ecosystem-network:
-    external: true
-
-volumes:
-  grafana-storage: 
